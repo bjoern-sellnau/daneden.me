@@ -1,4 +1,5 @@
 import { MDXFile, MDXFrontMatter } from "*.mdx"
+import Image from "@/components/Image"
 import Layout from "@/components/Layout"
 import allBlogPosts from "@/utils/mdxUtils"
 import smartypants from "@ngsctt/remark-smartypants"
@@ -7,14 +8,13 @@ import { GetStaticPaths, GetStaticProps } from "next"
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote"
 import { serialize } from "next-mdx-remote/serialize"
 import dynamic from "next/dynamic"
+import Link from "next/link"
 import { ComponentType } from "react"
 import katex from "rehype-katex"
-import slug from "rehype-slug"
+import toc from "rehype-toc"
 import abbr from "remark-abbr"
 import math from "remark-math"
-import toc from "remark-toc"
-import Image from "@/components/Image"
-import Link from "next/link"
+import slug from "remark-slug"
 
 const defaultComponents = {
   a: Link,
@@ -53,11 +53,11 @@ function buildComponentMap(source: string) {
     },
     TypedSystemsButton: {
       regex: /<TypedSystemsButton/,
-      component: dynamic(() => import("@/components/typed-systems-components")),
+      component: dynamic(() => import("@/components/blog/TypedSystemsButton")),
     },
     RedesignGallery: {
       regex: /<RedesignGallery/,
-      component: dynamic(() => import("@/components/RedesignGallery")),
+      component: dynamic(() => import("@/components/blog/RedesignGallery")),
     },
     SaturationDemo: {
       regex: /<SaturationDemo/,
@@ -68,11 +68,11 @@ function buildComponentMap(source: string) {
   // Search the passed string for component instances and include them if
   // necessary
   const map: { [key: string]: OpaqueComponentType } = {}
-  for (const prop in availableComponents) {
-    const currentComponent = availableComponents[prop]
+  for (const componentKey in availableComponents) {
+    const currentComponent = availableComponents[componentKey]
     const matches = currentComponent.regex.test(source)
     if (matches) {
-      map[prop] = currentComponent.component
+      map[componentKey] = currentComponent.component
     }
   }
 
@@ -119,8 +119,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   const mdxSource = await serialize(content, {
     mdxOptions: {
-      remarkPlugins: [abbr, smartypants, math, toc],
-      rehypePlugins: [katex, prism, slug],
+      remarkPlugins: [abbr, smartypants, math, slug],
+      rehypePlugins: [katex, prism, toc],
     },
   })
 
